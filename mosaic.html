@@ -1,11 +1,25 @@
 <!DOCTYPE html>
 <html>
-  <head>
+<head>
+    <!-- css here-->
+    <title>Mosaic</title>
+</head>
+<body>
+    <!-- Simple image input here-->
+    <div class="container">
+        <!-- simple toolbar of actions -->
+        <div class="toolbar">
+            <!-- only accept images -->
+            <input class="toolbar-input-file" type="file" id="image-upload" accept="image/*" />
+            <button class="toolbar-action" id="render-mosaic">render Mosaic</button>
+            <button class="toolbar-action" id="clear-preview">clear Preview</button>
+        </div>
+        <div class="preview-area">
+
+        </div>
+    </div>
+    <!-- All Scripts at the bottom of the body so as to improve loading -->
     <script type="text/javascript" src="js/mosaic.js"></script>
     <script type="text/javascript" src="js/client.js"></script>
-    <title>Mosaic</title>
-  </head>
-  <body>
-    <!-- Edit me. -->
-  </body>
+</body>
 </html>
