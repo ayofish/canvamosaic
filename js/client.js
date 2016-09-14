@@ -30,24 +30,37 @@
          * Event Listeners, set these up after the load of the dom elements and scripts
          */
         //event listener for image input
-        document.getElementById("image-input").addEventListener("change", onImageSelect, false);
+        document.getElementById("image-input").addEventListener("change", onChangeImageInput, false);
 
         //event listener for render mosaic
-        document.getElementById("render-mosaic").addEventListener("click", onImageSelect, false);
+        document.getElementById("render-mosaic").addEventListener("click", onClickClearPreview, false);
 
         //event listener for clear preview
-        document.getElementById("clear-preview").addEventListener("click", onImageSelect, false);
+        document.getElementById("clear-preview").addEventListener("click", onClickClearPreview, false);
     }
 
     /**
-     * [onImageSelect description]
+     * Handles the change event on the image input dom element
      * @param  {Object} event The event data
      * @return {void}
      */
-    function onImageSelect(event) {
+    function onChangeImageInput(event) {
+        //get the canvas dom reference
         var canvas = document.getElementById("preview-canvas");
+        //use the URL api and get the blob url of the image
         var url = URL.createObjectURL(event.target.files[0]);
+        //render the image in the canvas by using the uiHandler module
         uiHandler.renderImageInCanvas(canvas, url);
+    }
+
+    /**
+     * Handles the clearing of the preview area canvas'
+     * @param  {[type]} event [description]
+     * @return {[type]}       [description]
+     */
+    function onClickClearPreview(event){
+        uiHandler.clearCanvas(document.getElementById("preview-canvas"));
+        uiHandler.clearCanvas(document.getElementById("mosaic-canvas"));
     }
 
     //listener for window load event
