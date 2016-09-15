@@ -1,13 +1,19 @@
-var mosaicService = (function() {
+var mosaicService = (function(Utils) {
+    var svgServiceUrl = "/color/";
 
-    var Utils = {
+    var MosaicUtils = {
         convertToHex: function(number) {
             var str = number.toString(16);
             return str.length == 1 ? "0" + str : str;
+        },
+        createSVGblobUrl: function() {
+
         }
     };
 
-    var MosaicTile = function(tileImageData) {
+    var MosaicTile = function(tileImageData, tileRowIndex, tileColumnIndex) {
+        this.tileRowIndex = tileRowIndex;
+        this.tileColumnIndex = tileColumnIndex;
         this.tileImageData = tileImageData;
         this.r = 0;
         this.g = 0;
@@ -51,10 +57,13 @@ var mosaicService = (function() {
         },
 
         getAverageHex: function() {
-            var hexColor = Utils.convertToHex(this.r) + Utils.convertToHex(this.g) + Utils.convertToHex(this.b);
+            var hexColor = MosaicUtils.convertToHex(this.r) + MosaicUtils.convertToHex(this.g) + MosaicUtils.convertToHex(this.b);
             return hexColor;
         },
 
+        getSVGSUrl: function() {
+            return Utils.httpGet(svgServiceUrl + this.getAverageHex(), this);
+        }
     };
 
 
@@ -81,9 +90,12 @@ var mosaicService = (function() {
             }
             return this.imageData;
         },
+        _setMosaicRowData: function(){
+
+        },
         getMosaicData: function(callBack) {
             var imageData = this.getImageData();
-            var mosaicData = [];
+            var mosaic = [];
 
             for (var a = 0; a < this.rowTilesCount; a++) {
                 var mosaicRowTilesHex = [];
@@ -91,13 +103,15 @@ var mosaicService = (function() {
                     var xCoord = a * this.tileWidth;
                     var yCoord = b * this.tileHeight;
                     var tileImageData = this._getTileImageData(xCoord, yCoord);
-                    var oTile = new MosaicTile(tileImageData);
-                    oTile.setAverageRGB();
-                    mosaicRowTilesHex.push(oTile.getAverageHex());
+                    var mosaicTile = new MosaicTile(tileImageData);
+                    mosaicTile.setAverageRGB();
+                    mosaicTile.getSVGSUrl().then().catch();
+                    mosaicRowTilesHex.push(mosaicTile);
                 }
-                mosaicData.push(mosaicRowTilesHex);
+                mosaic.push(mosaicRowTilesHex);
             }
-            return mosaicData;
+            callBack(mosaic);
+            return mosaic;
         },
         _getTileImageData: function(xCoord, yCoord) {
             var fullImageData = this.getImageData();
@@ -124,4 +138,4 @@ var mosaicService = (function() {
         "MosaicTile": MosaicTile,
         "Utils": Utils
     };
-})();
+})(Utils);
