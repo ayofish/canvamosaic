@@ -1,27 +1,43 @@
-var mosaicService = (function(Utils) {
+var mosaicService = (function(Utils, Url, window) {
     var svgServiceUrl = "/color/";
 
     var MosaicUtils = {
         convertToHex: function(number) {
             var str = number.toString(16);
             return str.length == 1 ? "0" + str : str;
-        },
-        createSVGblobUrl: function() {
-
         }
     };
 
-    var MosaicTile = function(tileImageData, tileRowIndex, tileColumnIndex) {
-        this.tileRowIndex = tileRowIndex;
-        this.tileColumnIndex = tileColumnIndex;
-        this.tileImageData = tileImageData;
-        this.r = 0;
-        this.g = 0;
-        this.b = 0;
+    var MosaicTile = function() {
+        this.getSVGSUrlCallback = null;
+        this.tileRowIndex = null;
+        this.tileColumnIndex = null;
+        this.tileImageData = null;
+        this.r = null;
+        this.g = null;
+        this.b = null;
+        this.svgTextXml = null;
+        this.svgUrl = null;
+        this.xCoord = null;
+        this.yCoord = null;
+        this.init.apply(this, arguments);
         return this;
     };
 
     MosaicTile.prototype = {
+        init: function(tileImageData, tileRowIndex, tileColumnIndex, xCoord, yCoord) {
+            this.getSVGSUrlCallback = null;
+            this.tileRowIndex = tileRowIndex;
+            this.tileColumnIndex = tileColumnIndex;
+            this.tileImageData = tileImageData;
+            this.r = 0;
+            this.g = 0;
+            this.b = 0;
+            this.svgTextXml = "";
+            this.svgUrl = "";
+            this.xCoord = xCoord;
+            this.yCoord = yCoord;
+        },
         setAverageRGB: function() {
             var tileImageData = this.tileImageData;
             var i = 0,
@@ -61,8 +77,26 @@ var mosaicService = (function(Utils) {
             return hexColor;
         },
 
-        getSVGSUrl: function() {
-            return Utils.httpGet(svgServiceUrl + this.getAverageHex(), this);
+        _onLoadGetSVGUrl: function(svgtext) {
+            this.svgTextXml = svgtext;
+            var blob = new Blob([svgtext], { type: 'image/svg+xml;charset=utf-8' });
+            this.svgUrl = Url.createObjectURL(blob);
+            this.getSVGSUrlCallback(this);
+        },
+
+        _onErrorGetSVGUrl: function(errorText) {
+            console.log(errorText);
+        },
+        getSVGSUrl: function(callBack) {
+            var that = this;
+            this.getSVGSUrlCallback = callBack;
+            Utils.httpGet(svgServiceUrl + this.getAverageHex())
+                .then(function(svgtext) {
+                    that._onLoadGetSVGUrl(svgtext);
+                })
+                .catch(function(errorText) {
+                    that._onErrorGetSVGUrl(errorText);
+                });
         }
     };
 
@@ -74,47 +108,73 @@ var mosaicService = (function(Utils) {
      * @param {[type]} tileHeight    [description]
      */
     var Mosaic = function(canvasContext, tileWidth, tileHeight) {
+        this.getMosaicDataCallback = null;
         this.canvasContext = canvasContext;
         this.imageData = null;
         this.tileWidth = (!tileWidth ? 1 : tileWidth);
         this.tileHeight = (!tileHeight ? 1 : tileHeight);
         this.rowTilesCount = this.canvasContext.canvas.width / this.tileWidth;
         this.columnTilesCount = this.canvasContext.canvas.height / this.tileHeight;
+        this.totalTiles = 0;
+        this.mosaicData = [];
+        this.mosaic = [];
+        this.currTilesSvgLoaded = 0;
         return this;
     };
 
     Mosaic.prototype = {
+        init: function() {
+
+        },
         getImageData: function() {
             if (this.imageData === null) {
                 this.imageData = this.canvasContext.getImageData(0, 0, this.canvasContext.canvas.width, this.canvasContext.canvas.height);
             }
             return this.imageData;
         },
-        _setMosaicRowData: function(){
-
+        _onTileSVGURLLoaded: function(mosaicTile) {
+            if (typeof this.mosaicData[mosaicTile.tileRowIndex] === "undefined") {
+                this.mosaicData[mosaicTile.tileRowIndex] = [];
+            }
+            this.mosaicData[mosaicTile.tileRowIndex][mosaicTile.tileColumnIndex] = {
+                svgUrl: mosaicTile.svgUrl,
+                xCoord: mosaicTile.xCoord,
+                yCoord: mosaicTile.yCoord
+            };
+            this.currTilesSvgLoaded++;
+            if (this.currTilesSvgLoaded === this.totalTiles) {
+                this.getMosaicDataCallback(this.mosaicData, this);
+            }
         },
         getMosaicData: function(callBack) {
+            this.mosaicData = [];
+            this.mosaic = [];
+            this.getMosaicDataCallback = callBack;
             var imageData = this.getImageData();
-            var mosaic = [];
-
+            var that = this;
             for (var a = 0; a < this.rowTilesCount; a++) {
                 var mosaicRowTilesHex = [];
                 for (var b = 0; b < this.columnTilesCount; b++) {
                     var xCoord = a * this.tileWidth;
                     var yCoord = b * this.tileHeight;
                     var tileImageData = this._getTileImageData(xCoord, yCoord);
-                    var mosaicTile = new MosaicTile(tileImageData);
+                    var mosaicTile = new MosaicTile(tileImageData, a, b, xCoord, yCoord);
                     mosaicTile.setAverageRGB();
-                    mosaicTile.getSVGSUrl().then().catch();
                     mosaicRowTilesHex.push(mosaicTile);
+                    this.totalTiles++;
+                    mosaicTile.getSVGSUrl(function(mosaicTile) {
+                        that._onTileSVGURLLoaded(mosaicTile);
+                    });
+
                 }
-                mosaic.push(mosaicRowTilesHex);
+                this.mosaic.push(mosaicRowTilesHex);
             }
-            callBack(mosaic);
-            return mosaic;
+            // callBack(mosaic);
+            // return mosaic;
         },
         _getTileImageData: function(xCoord, yCoord) {
             var fullImageData = this.getImageData();
+
             var data = [];
             for (var x = xCoord; x < (xCoord + this.tileWidth); x++) {
                 var xPos = x * 4;
@@ -138,4 +198,4 @@ var mosaicService = (function(Utils) {
         "MosaicTile": MosaicTile,
         "Utils": Utils
     };
-})(Utils);
+})(Utils, window.URL, window);

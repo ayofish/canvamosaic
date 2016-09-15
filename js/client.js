@@ -70,9 +70,12 @@
      */
     function onClickRenderMosaic(event){
         var canvas = document.getElementById("preview-canvas");
+        uiHandler.clearCanvas(document.getElementById("mosaic-canvas"));
         var mosaic = new mosaicService.Mosaic(canvas.getContext("2d"), tileWidth, tileHeight);
-        var mosaicData = mosaic.getMosaicData();
-        uiHandler.renderMosaic(document.getElementById("mosaic-canvas"), mosaicData);
+        mosaic.getMosaicData(function(mosaicData){
+            uiHandler.renderMosaic(document.getElementById("mosaic-canvas"), mosaicData, canvas.width, canvas.height);
+        });
+        // uiHandler.renderMosaic(document.getElementById("mosaic-canvas"), mosaicData);
     }
 
     //listener for window load event

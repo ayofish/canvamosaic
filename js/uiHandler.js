@@ -9,7 +9,7 @@
  * @param  {number} TOTAL_HEIGHT
  * @return {Object}               The functions that are exposed for usage in changing the ui
  */
-var uiHandler = (function() {
+var uiHandler = (function(URL) {
     "use strict";
 
     /**
@@ -65,7 +65,7 @@ var uiHandler = (function() {
      * @param  {Object} elem The dom element
      * @return {Object} elem The modified dom element
      */
-    function fadeInElem(elem){
+    function fadeInElem(elem) {
         //add both classes to the element
         elem.classList.add("fade");
         elem.classList.add("fadein");
@@ -77,7 +77,7 @@ var uiHandler = (function() {
      * @param  {Object} elem The dom element
      * @return {Object} elem The modified dom element
      */
-    function fadeOutElem(elem){
+    function fadeOutElem(elem) {
         //just for added effect, fade out the image
         elem.classList.add("fade");
         //remove the fadein class so as to fade out the image
@@ -93,7 +93,7 @@ var uiHandler = (function() {
      * @param  {Object} elem The dom element
      * @return {Object} elem The modified dom element
      */
-    function forceElemRedraw(elem){
+    function forceElemRedraw(elem) {
         elem.style.display = 'none';
         elem.offsetHeight; // no need to store this anywhere, the reference is enough
         elem.style.display = '';
@@ -106,8 +106,39 @@ var uiHandler = (function() {
      * @param  {[type]} mosaicData [description]
      * @return {[type]}            [description]
      */
-    function renderMosaic(canvasElem, mosaicData){
+    function renderMosaic(canvasElem, mosaicData, canvasHeight, canvasWidth) {
+        //loop through each row and render
+        var canvasContext = canvasElem.getContext("2d");
+        canvasContext.canvas.height = 1000;
+        canvasContext.canvas.width = 1000;
+        for (var i = 0; i < mosaicData.length; i++) {
+            _renderMosaicRow(canvasContext, mosaicData[i]);
+        }
+        fadeInElem(canvasElem);
 
+    }
+
+    function _renderMosaicRow(canvasContext, rowData){
+        for(var i=0;i<rowData.length;i++){
+            var rowDataObj = rowData[i];
+            _renderMosaicTile(canvasContext, rowDataObj.svgUrl, rowDataObj.xCoord, rowDataObj.yCoord);
+        }
+    }
+
+    function _renderMosaicTile(canvasContext, imgSrc, xCoord, yCoord) {
+        var img = new Image();
+        img.onload = function() {
+            try {
+                canvasContext.drawImage(img, xCoord, yCoord);
+                canvasContext.imageSmoothingEnabled = false;
+                canvasContext.mozImageSmoothingEnabled = false;
+                //release the url
+                URL.revokeObjectURL(imgSrc);
+            } catch (e) {
+                throw new Error(e);
+            }
+        };
+        img.src = imgSrc;
     }
 
     //the public methods for this module
@@ -117,4 +148,4 @@ var uiHandler = (function() {
         "fadeInElem": fadeInElem,
         "renderMosaic": renderMosaic
     };
-})();
+})(window.URL);
