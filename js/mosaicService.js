@@ -233,9 +233,9 @@ var mosaicService = (function(Utils, Url, window) {
                     //increment by one
                     currIndex++;
                     //next tile
-                    window.setTimeout(function() {
+                    // window.setTimeout(function() {
                         that._getTileSvgUrlRecursive(mosaic[currIndex], currIndex, totalTilesCount, mosaic);
-                    }, 10);
+                    // }, 10);
 
                 });
 
