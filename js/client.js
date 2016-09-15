@@ -18,7 +18,7 @@
         //let's initialize the event listeners
         initEventListeners();
         //fade in the dom elements for the user to see
-        document.getElementById("main-container").classList.add("fadein");
+        uiHandler.fadeInElem(document.getElementById("main-container"));
     }
 
     /**
@@ -33,7 +33,7 @@
         document.getElementById("image-input").addEventListener("change", onChangeImageInput, false);
 
         //event listener for render mosaic
-        document.getElementById("render-mosaic").addEventListener("click", onClickClearPreview, false);
+        document.getElementById("render-mosaic").addEventListener("click", onClickRenderMosaic, false);
 
         //event listener for clear preview
         document.getElementById("clear-preview").addEventListener("click", onClickClearPreview, false);
@@ -55,12 +55,21 @@
 
     /**
      * Handles the clearing of the preview area canvas'
-     * @param  {[type]} event [description]
-     * @return {[type]}       [description]
+     * @param  {Object} event The event data
+     * @return {void}
      */
     function onClickClearPreview(event){
         uiHandler.clearCanvas(document.getElementById("preview-canvas"));
         uiHandler.clearCanvas(document.getElementById("mosaic-canvas"));
+    }
+
+    /**
+     * Event handler for when a click occurs on the render mosaic button
+     * @param  {Object} event The event data
+     * @return {void}
+     */
+    function onClickRenderMosaic(event){
+
     }
 
     //listener for window load event
