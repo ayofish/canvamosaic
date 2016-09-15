@@ -45,12 +45,14 @@
      * @return {void}
      */
     function onChangeImageInput(event) {
-        //get the canvas dom reference
-        var canvas = document.getElementById("preview-canvas");
-        //use the URL api and get the blob url of the image
-        var url = URL.createObjectURL(event.target.files[0]);
-        //render the image in the canvas by using the uiHandler module
-        uiHandler.renderImageInCanvas(canvas, url);
+        if (typeof event.target.files[0] !== "undefined") {
+            //get the canvas dom reference
+            var canvas = document.getElementById("preview-canvas");
+            //use the URL api and get the blob url of the image
+            var url = URL.createObjectURL(event.target.files[0]);
+            //render the image in the canvas by using the uiHandler module
+            uiHandler.renderImageInCanvas(canvas, url);
+        }
     }
 
     /**
@@ -58,9 +60,9 @@
      * @param  {Object} event The event data
      * @return {void}
      */
-    function onClickClearPreview(event){
+    function onClickClearPreview(event) {
         uiHandler.clearCanvas(document.getElementById("preview-canvas"));
-        uiHandler.clearCanvas(document.getElementById("mosaic-canvas"));
+        // uiHandler.clearCanvas(document.getElementById("mosaic-canvas"));
     }
 
     /**
@@ -68,14 +70,13 @@
      * @param  {Object} event The event data
      * @return {void}
      */
-    function onClickRenderMosaic(event){
+    function onClickRenderMosaic(event) {
         var canvas = document.getElementById("preview-canvas");
-        uiHandler.clearCanvas(document.getElementById("mosaic-canvas"));
+        // uiHandler.clearCanvas(document.getElementById("mosaic-canvas"));
         var mosaic = new mosaicService.Mosaic(canvas.getContext("2d"), tileWidth, tileHeight);
-        mosaic.getMosaicData(function(mosaicData){
-            uiHandler.renderMosaic(document.getElementById("mosaic-canvas"), mosaicData, canvas.width, canvas.height);
+        mosaic.getMosaicData(function(mosaicData) {
+            uiHandler.renderMosaic(document.getElementById("mosaic-area"), mosaicData, canvas.height, canvas.width);
         });
-        // uiHandler.renderMosaic(document.getElementById("mosaic-canvas"), mosaicData);
     }
 
     //listener for window load event

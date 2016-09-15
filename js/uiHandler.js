@@ -106,16 +106,18 @@ var uiHandler = (function(URL) {
      * @param  {[type]} mosaicData [description]
      * @return {[type]}            [description]
      */
-    function renderMosaic(canvasElem, mosaicData, canvasHeight, canvasWidth) {
+    function renderMosaic(canvasContainer, mosaicData, canvasHeight, canvasWidth) {
         //loop through each row and render
+        var canvasElem = document.createElement('canvas');
         var canvasContext = canvasElem.getContext("2d");
-        canvasContext.canvas.height = 1000;
-        canvasContext.canvas.width = 1000;
+        canvasElem.height = canvasHeight;
+        canvasElem.width = canvasWidth;
         for (var i = 0; i < mosaicData.length; i++) {
             _renderMosaicRow(canvasContext, mosaicData[i]);
         }
+        canvasContainer.innerHTML = null;
+        canvasContainer.appendChild(canvasElem);
         fadeInElem(canvasElem);
-
     }
 
     function _renderMosaicRow(canvasContext, rowData){
@@ -126,10 +128,11 @@ var uiHandler = (function(URL) {
     }
 
     function _renderMosaicTile(canvasContext, imgSrc, xCoord, yCoord) {
-        var img = new Image();
-        img.onload = function() {
+        var image = new Image();
+        image.src = imgSrc;
+        image.onload = function() {
             try {
-                canvasContext.drawImage(img, xCoord, yCoord);
+                canvasContext.drawImage(image, xCoord, yCoord);
                 canvasContext.imageSmoothingEnabled = false;
                 canvasContext.mozImageSmoothingEnabled = false;
                 //release the url
@@ -138,7 +141,7 @@ var uiHandler = (function(URL) {
                 throw new Error(e);
             }
         };
-        img.src = imgSrc;
+
     }
 
     //the public methods for this module
