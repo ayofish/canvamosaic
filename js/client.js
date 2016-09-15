@@ -6,7 +6,7 @@
  * @param {Object} uiHandler the module that handles ui updates
  * @return {void}
  */
-(function(window, document, URL, uiHandler) {
+(function(window, document, URL, uiHandler, mosaicService, tileWidth, tileHeight) {
     "use strict";
     //event handlers, I like keeping these as static functions for simplicity and readability
     /**
@@ -69,10 +69,13 @@
      * @return {void}
      */
     function onClickRenderMosaic(event){
-
+        var canvas = document.getElementById("preview-canvas");
+        var mosaic = new mosaicService.Mosaic(canvas.getContext("2d"), tileWidth, tileHeight);
+        var mosaicData = mosaic.getMosaicData();
+        uiHandler.renderMosaic(document.getElementById("mosaic-canvas"), mosaicData);
     }
 
     //listener for window load event
     window.addEventListener("load", onLoad, false);
 
-})(window, document, (window.webkitURL || window.URL), uiHandler);
+})(window, document, window.URL, uiHandler, mosaicService, TILE_WIDTH, TILE_HEIGHT);

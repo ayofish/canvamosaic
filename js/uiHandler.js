@@ -3,7 +3,13 @@
  * This uses the revealing module pattern so as to encapsulate code and just expose some methods and variables.
  * @return {[type]}     [description]
  */
-var uiHandler = (function(utils) {
+/**
+ * uiHandler module handles all the ui changes that occur so as to separate business logic from ui logic.
+ * @param  {number} TOTAL_WIDTH   the total width of each tile
+ * @param  {number} TOTAL_HEIGHT
+ * @return {Object}               The functions that are exposed for usage in changing the ui
+ */
+var uiHandler = (function() {
     "use strict";
 
     /**
@@ -94,10 +100,21 @@ var uiHandler = (function(utils) {
         return elem;
     }
 
+    /**
+     * [renderMosaic description]
+     * @param  {[type]} canvasElem [description]
+     * @param  {[type]} mosaicData [description]
+     * @return {[type]}            [description]
+     */
+    function renderMosaic(canvasElem, mosaicData){
+
+    }
+
     //the public methods for this module
     return {
         "renderImageInCanvas": renderImageInCanvas,
         "clearCanvas": clearCanvas,
-        "fadeInElem": fadeInElem
+        "fadeInElem": fadeInElem,
+        "renderMosaic": renderMosaic
     };
 })();
