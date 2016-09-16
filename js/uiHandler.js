@@ -110,6 +110,8 @@ var uiHandler = (function(URL) {
         //loop through each row and render
         var canvasElem = document.createElement('canvas');
         var canvasContext = canvasElem.getContext("2d");
+        canvasContext.imageSmoothingEnabled = false;
+        canvasContext.mozImageSmoothingEnabled = false;
         canvasElem.height = canvasHeight;
         canvasElem.width = canvasWidth;
         for (var i = 0; i < mosaicData.length; i++) {
@@ -120,23 +122,36 @@ var uiHandler = (function(URL) {
         fadeInElem(canvasElem);
     }
 
-    function _renderMosaicRow(canvasContext, rowData){
-        for(var i=0;i<rowData.length;i++){
-            var rowDataObj = rowData[i];
-            _renderMosaicTile(canvasContext, rowDataObj.svgUrl, rowDataObj.xCoord, rowDataObj.yCoord);
+    function _renderMosaicRow(canvasContext, rowData) {
+        _renderMosaicTilesRecursive(rowData[0], 0, rowData.length, rowData, canvasContext);
+        // for (var i = 0; i < rowData.length; i++) {
+        //     var rowDataObj = rowData[i];
+        //     // _renderMosaicTile(canvasContext, rowDataObj.svgUrl, rowDataObj.xCoord, rowDataObj.yCoord);
+        // }
+    }
+
+    function _renderMosaicTilesRecursive(mosaicTile, iter, totalTiles, rowTiles, canvasContext){
+        if(iter == totalTiles){
+            return;
+        }else{
+            iter++;
+            _renderMosaicTile(canvasContext, mosaicTile.svgUrl, mosaicTile.xCoord, mosaicTile.yCoord, function(){
+                _renderMosaicTilesRecursive(rowTiles[iter], iter, totalTiles, rowTiles, canvasContext);
+            });
         }
     }
 
-    function _renderMosaicTile(canvasContext, imgSrc, xCoord, yCoord) {
+    function _renderMosaicTile(canvasContext, imgSrc, xCoord, yCoord, onImageLoaded) {
         var image = new Image();
         image.src = imgSrc;
         image.onload = function() {
             try {
                 canvasContext.drawImage(image, xCoord, yCoord);
-                canvasContext.imageSmoothingEnabled = false;
-                canvasContext.mozImageSmoothingEnabled = false;
+                // canvasContext.imageSmoothingEnabled = false;
+                // canvasContext.mozImageSmoothingEnabled = false;
                 //release the url
                 URL.revokeObjectURL(imgSrc);
+                onImageLoaded(this);
             } catch (e) {
                 throw new Error(e);
             }

@@ -16,11 +16,11 @@ function getSvgUrlRecursive(mosaicTile, currIndex, totalTilesCount, mosaic, rowI
     }
 }
 
-// function getSvgUrl(svgtext) {
-//     var blob = new Blob([svgtext], { type: 'image/svg+xml;charset=utf-8' });
-//     svgUrl = URL.createObjectURL(blob);
-//     return svgUrl;
-// }
+function getSvgUrl(svgtext) {
+    var blob = new Blob([svgtext], { type: 'image/svg+xml;charset=utf-8' });
+    svgUrl = URL.createObjectURL(blob);
+    return svgUrl;
+}
 
 function httpGet(url, data) {
     var promise = new Promise(function(resolve, reject) {
@@ -44,9 +44,5 @@ function httpGet(url, data) {
 }
 
 self.addEventListener('message', function(ev) {
-
     getSvgUrlRecursive.apply(self, ev.data);
-
-
-    // self.postMessage(ev.data);
 }, false);
