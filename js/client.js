@@ -35,8 +35,17 @@
         //event listener for render mosaic
         document.getElementById("render-mosaic").addEventListener("click", onClickRenderMosaic, false);
 
-        //event listener for clear preview
-        document.getElementById("clear-preview").addEventListener("click", onClickClearPreview, false);
+        //event listener for file input button click
+        document.getElementById("file-input-button").addEventListener("click", onClickFileInputButton, false);
+    }
+
+    /**
+     * Handles the click on the file input button so request for a file
+     * @param  {Object} event The event data
+     * @return {void}
+     */
+    function onClickFileInputButton(event){
+        document.getElementById("image-input").click();
     }
 
     /**
@@ -48,20 +57,17 @@
         if (typeof event.target.files[0] !== "undefined") {
             //get the canvas dom reference
             //use the URL api and get the blob url of the image
-            var url = URL.createObjectURL(event.target.files[0]);
+            var image = event.target.files[0];
+            var inputFileNameContainer = document.getElementById("input-file-name");
+            inputFileNameContainer.innerHTML = image.name;
+            inputFileNameContainer.title = image.name;
+            uiHandler.hideElem(document.getElementById("fakeimagearea"));
+            uiHandler.showElem(document.getElementById("imagearea"));
+            var url = URL.createObjectURL(image);
             //render the image in the canvas by using the uiHandler module
             uiHandler.hideElem(document.getElementById("mosaic-area"));
             uiHandler.renderImageInPreviewCanvas(document.getElementById("preview-area"), url);
         }
-    }
-
-    /**
-     * Handles the clearing of the preview area canvas'
-     * @param  {Object} event The event data
-     * @return {void}
-     */
-    function onClickClearPreview(event) {
-        uiHandler.clearCanvas(document.getElementById("preview-canvas"));
     }
 
     /**
@@ -71,11 +77,14 @@
      */
     function onClickRenderMosaic(event) {
         var canvas = document.getElementById("preview-canvas");
-        if (typeof canvas !== "undefined") {
+        if (canvas !== null) {
             uiHandler.hideElem(document.getElementById("preview-area"));
+            uiHandler.showElem(document.getElementById("loading-text-area"));
             var mosaic = new mosaicService.Mosaic(canvas.getContext("2d"), tileWidth, tileHeight);
             mosaic.getMosaicData(function(mosaicData) {
-                uiHandler.renderMosaic(document.getElementById("mosaic-area"), mosaicData, canvas.height, canvas.width);
+                uiHandler.renderMosaic(document.getElementById("mosaic-area"), mosaicData, canvas.height, canvas.width).then(function(){
+                    uiHandler.hideElem(document.getElementById("loading-text-area"));
+                });
             });
         }
     }

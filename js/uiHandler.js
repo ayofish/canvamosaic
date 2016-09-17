@@ -23,6 +23,7 @@ var uiHandler = (function(URL) {
     var renderImageInPreviewCanvas = function(container, imageURL) {
         //just for added effect, fade out the image
         fadeOutElem(container);
+
         var canvas = document.createElement('canvas');
         canvas.id = "preview-canvas";
         var canvasContext = canvas.getContext("2d");
@@ -38,6 +39,8 @@ var uiHandler = (function(URL) {
             canvas.width = this.width;
             //set the height of the canvas to the same height as the image
             canvas.height = this.height;
+            container.parentNode.style.width = this.width + "px";
+            container.parentNode.style.height = this.height+ "px";
             //let's draw the preview image in the canvas
             // canvasContext.drawImage(this, 0, 0, canvas.width, canvas.height);
             _drawImage(canvasContext, this, 0, 0);
@@ -112,11 +115,11 @@ var uiHandler = (function(URL) {
         return elem;
     }
 
-    function hideElem(elem){
+    function hideElem(elem) {
         elem.style.display = 'none';
     }
 
-    function showElem(elem){
+    function showElem(elem) {
         elem.style.display = '';
     }
 
@@ -127,27 +130,29 @@ var uiHandler = (function(URL) {
      * @return {[type]}            [description]
      */
     function renderMosaic(canvasContainer, mosaicData, canvasHeight, canvasWidth) {
-        //loop through each row and render
-        var canvasElem = document.createElement('canvas');
-        canvasElem.id = "mosaic-canvas";
-        var canvasContext = canvasElem.getContext("2d");
-        canvasContext.imageSmoothingEnabled = false;
-        canvasContext.mozImageSmoothingEnabled = false;
-        canvasElem.height = canvasHeight;
-        canvasElem.width = canvasWidth;
-        var renderMosaicRowPromises = [];
-        for (var i = 0; i < mosaicData.length; i++) {
-            renderMosaicRowPromises.push(_renderMosaicRow(canvasContext, mosaicData[i]));
-        }
-        fadeOutElem(canvasElem);
-        canvasContainer.innerHTML = null;
-        canvasContainer.appendChild(canvasElem);
-        Promise.all(renderMosaicRowPromises).then(function() {
-            showElem(document.getElementById("mosaic-area"));
-            fadeInElem(canvasElem);
-
+        var renderMosiacPromise = new Promise(function(resolve, reject) {
+            //loop through each row and render
+            var canvasElem = document.createElement('canvas');
+            canvasElem.id = "mosaic-canvas";
+            var canvasContext = canvasElem.getContext("2d");
+            canvasContext.imageSmoothingEnabled = false;
+            canvasContext.mozImageSmoothingEnabled = false;
+            canvasElem.height = canvasHeight;
+            canvasElem.width = canvasWidth;
+            var renderMosaicRowPromises = [];
+            for (var i = 0; i < mosaicData.length; i++) {
+                renderMosaicRowPromises.push(_renderMosaicRow(canvasContext, mosaicData[i]));
+            }
+            fadeOutElem(canvasElem);
+            canvasContainer.innerHTML = null;
+            canvasContainer.appendChild(canvasElem);
+            Promise.all(renderMosaicRowPromises).then(function() {
+                showElem(canvasContainer);
+                fadeInElem(canvasElem);
+                resolve(canvasContainer);
+            });
         });
-
+        return renderMosiacPromise;
     }
 
     function _renderMosaicRow(canvasContext, rowData) {

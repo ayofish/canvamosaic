@@ -3,7 +3,7 @@
 
 <head>
     <!-- css here-->
-    <link rel="stylesheet" type="text/css" href="css/style.css" >
+    <link rel="stylesheet" type="text/css" href="css/style.css">
     <title>Mosaic</title>
 </head>
 
@@ -12,13 +12,28 @@
     <div id="main-container" class="fade">
         <!-- simple toolbar of actions -->
         <div class="toolbar">
+            <h1>Mosaic Maker</h1>
             <!-- only accept images -->
-            <input class="toolbar-input-file" type="file" id="image-input" accept="image/*" />
-            <button class="toolbar-action" id="render-mosaic">Render Mosaic</button>
-            <button class="toolbar-action" id="clear-preview">Clear Preview</button>
+            <!-- <input class="toolbar-input-file" type="file" id="image-input" accept="image/*" /> -->
+            <div class="fileinputcontainer">
+                <!-- <label for="image-input">Choose a file</label> -->
+                <button id="file-input-button">Choose a Picture</button>
+                <div id="input-file-name"></div>
+                <input type="file" name="file" id="image-input" accept="image/*" class="fileinput" />
+            </div>
+            <div class="toolbaractions">
+                <button class="toolbar-action" id="render-mosaic">Render Mosaic</button>
+            </div>
+        </div>
+        <div id="fakeimagearea">
+            image preview
+        </div>
+        <!-- loading text -->
+        <div id="loading-text-area" style="display:none;">
+            <span class="loadingText">rendering mosaic...</span>
         </div>
         <!-- preview area-->
-        <div class="preview-area">
+        <div id="imagearea" style="display:none;">
             <!-- preview canvas for original image-->
             <div id="preview-area">
                 <!-- <canvas id="preview-canvas"></canvas> -->

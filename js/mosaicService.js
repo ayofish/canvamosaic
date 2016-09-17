@@ -136,7 +136,6 @@ var mosaicService = (function(Utils, Url, window) {
             var that = this;
             for (var a = 0; a < this.columnTilesCount; a++) {
 
-                // var mosaicRowTiles = [];
                 for (var b = 0; b < this.rowTilesCount; b++) {
                     var yCoord = a * this.tileHeight;
                     var xCoord = b * this.tileWidth;
