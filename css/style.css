@@ -5,17 +5,15 @@ body {
     font-size: 12px;
 }
 
-
-
 #main-container {
     text-align: center;
 }
-
+/**
+ * fade out effect
+ */
 .fade {
     opacity: 0;
-    /*margin-top: 25px;*/
     font-size: 21px;
-    /*text-align: center;*/
     -webkit-transition: opacity 0.5s ease-in;
     -moz-transition: opacity 0.5s ease-in;
     -o-transition: opacity 0.5s ease-in;
@@ -23,10 +21,16 @@ body {
     transition: opacity 0.5s ease-in;
 }
 
+/**
+ * fade in
+ */
 .fade.fadein {
     opacity: 1;
 }
 
+/**
+ * the loading text
+ */
 .loadingText {
     font-size: 44px;
     text-decoration: none;
@@ -98,6 +102,9 @@ body {
     border: dashed 5px #ccc;
 }
 
+/**
+ * style the toolbar buttons
+ */
 .toolbar button {
     font-family: "Lucida Console";
     background-color: #fff;
@@ -113,10 +120,9 @@ body {
     font-weight: 400;
     padding: 10px;
 }
-.toolbar button:hover, .toolbar button:focus{
+
+.toolbar button:hover,
+.toolbar button:focus,
+.toolbar button:disabled {
     background-color: #d8d8d8;
-}
-
-#loading-text-area{
-
 }

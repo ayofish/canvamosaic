@@ -44,7 +44,7 @@
      * @param  {Object} event The event data
      * @return {void}
      */
-    function onClickFileInputButton(event){
+    function onClickFileInputButton(event) {
         document.getElementById("image-input").click();
     }
 
@@ -80,10 +80,14 @@
         if (canvas !== null) {
             uiHandler.hideElem(document.getElementById("preview-area"));
             uiHandler.showElem(document.getElementById("loading-text-area"));
+            document.getElementById("file-input-button").disabled = true;
+            document.getElementById("render-mosaic").disabled = true;
             var mosaic = new mosaicService.Mosaic(canvas.getContext("2d"), tileWidth, tileHeight);
             mosaic.getMosaicData().then(function(mosaicData) {
-                uiHandler.renderMosaic(document.getElementById("mosaic-area"), mosaicData, canvas.height, canvas.width).then(function(){
+                uiHandler.renderMosaic(document.getElementById("mosaic-area"), mosaicData, canvas.height, canvas.width).then(function() {
                     uiHandler.hideElem(document.getElementById("loading-text-area"));
+                    document.getElementById("file-input-button").disabled = false;
+                    document.getElementById("render-mosaic").disabled = false;
                 });
             });
         }
