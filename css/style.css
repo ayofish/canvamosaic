@@ -8,9 +8,12 @@ body {
 #main-container {
     text-align: center;
 }
+
+
 /**
  * fade out effect
  */
+
 .fade {
     opacity: 0;
     font-size: 21px;
@@ -21,16 +24,20 @@ body {
     transition: opacity 0.5s ease-in;
 }
 
+
 /**
  * fade in
  */
+
 .fade.fadein {
     opacity: 1;
 }
 
+
 /**
  * the loading text
  */
+
 .loadingText {
     font-size: 44px;
     text-decoration: none;
@@ -98,13 +105,19 @@ body {
 }
 
 #imagearea {
-    margin: 5px auto 5px auto;
-    border: dashed 5px #ccc;
+    margin: 5px auto;
 }
+
+.borderimagearea {
+    border: dashed 5px #ccc;
+    padding: 7px;
+}
+
 
 /**
  * style the toolbar buttons
  */
+
 .toolbar button {
     font-family: "Lucida Console";
     background-color: #fff;

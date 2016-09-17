@@ -155,48 +155,86 @@ var uiHandler = (function(URL) {
      * @return {[type]}            [description]
      */
     function renderMosaic(canvasContainer, mosaicData, canvasHeight, canvasWidth) {
+        //create a promise for the function call so as not to block the user
         var renderMosiacPromise = new Promise(function(resolve, reject) {
-            //loop through each row and render
+            //make a canvas element
             var canvasElem = document.createElement('canvas');
             canvasElem.id = "mosaic-canvas";
             var canvasContext = canvasElem.getContext("2d");
+            //set as the same dimensions of the preview canvas
             canvasElem.height = canvasHeight;
             canvasElem.width = canvasWidth;
+            //store all the row rendering promises
             var renderMosaicRowPromises = [];
+            //loop through each row and render one row at a time
             for (var i = 0; i < mosaicData.length; i++) {
                 var mosaicRow = mosaicData[i];
+                //let's store the promises to be resolved
                 renderMosaicRowPromises.push(_renderMosaicRow(mosaicRow, canvasContext));
-                // _rendertMosaicTileImageRecursive(mosaicRow[0], 0, mosaicRow, canvasContext);
             }
+            //resolve all the promises then proceed with inserting the canvas into the dom
             Promise.all(renderMosaicRowPromises).then(function() {
                 canvasContainer.innerHTML = null;
                 canvasContainer.appendChild(canvasElem);
+                //just added effect
                 showElem(canvasContainer);
+                //finally resolve the promise
                 resolve(canvasContainer);
             });
         });
         return renderMosiacPromise;
     }
 
+    /**
+     * Renders a mosaic row, returns a promise
+     * @param  {Object} mosaicRow     An array of mosaic tiles
+     * @param  {Object} canvasContext The canvas context
+     * @return {Object}               A promise object
+     */
     function _renderMosaicRow(mosaicRow, canvasContext){
+        //make a promise so that later we can be sure that all of the tiles will be shown at the same time as the whole canvas
         return new Promise(function(resolve, reject){
+            // call the recursive function
+            // Recursion is needed to assure that each tile image is rendered before going to the next
+            // this avoids the insufficient resources error
             _rendertMosaicTileImageRecursive(mosaicRow[0], 0, mosaicRow, canvasContext, resolve);
         });
     }
 
+    /**
+     * Recursive function assuring the tiles are rendered one at a time in a queue
+     * @param  {Object} mosaicTile    The mosaic tile to render
+     * @param  {number} index         the current index to iterate on
+     * @param  {Object} mosaicTiles   An array of mosaic tiles
+     * @param  {Object} canvasContext The canvas context
+     * @param  {function} callBack    The callback function, in this case the resolve of the promise
+     * @return {void}
+     */
     function _rendertMosaicTileImageRecursive(mosaicTile, index, mosaicTiles, canvasContext, callBack) {
+        //if the index = the mosaic tiles length then let us end the recursion
         if (index === mosaicTiles.length) {
             callBack(mosaicTiles);
-            // return mosaicTiles;
+            return;
         } else {
+            //let's get the promise here to render each image
             _getMosaicTileImage(mosaicTile.svgUrl, mosaicTile.xCoord, mosaicTile.yCoord, canvasContext).then(function(imageData) {
-                // _drawImage(canvasContext, imageData.image, imageData.xCoord, imageData.yCoord);
+                //increment by one so that the next call to the function in the recursion is the next item on the array
                 index++;
+                //call the function again
                 _rendertMosaicTileImageRecursive(mosaicTiles[index], index, mosaicTiles, canvasContext, callBack);
             });
         }
     }
 
+    /**
+     * In charge of drawing the image tile on the canvas.
+     * Returns a promise so that it will be async in nature
+     * @param  {blob} imgSrc          The blob url of the svg
+     * @param  {number} xCoord        [description]
+     * @param  {number} yCoord        [description]
+     * @param  {Object} canvasContext The canvas context
+     * @return {Object}               A promise object
+     */
     function _getMosaicTileImage(imgSrc, xCoord, yCoord, canvasContext) {
         //create a promise object for each image to be created
         var promise = new Promise(function(resolve, reject) {

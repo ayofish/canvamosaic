@@ -101,6 +101,7 @@
                     //enable the buttons again
                     document.getElementById("file-input-button").disabled = false;
                     document.getElementById("render-mosaic").disabled = false;
+                    //show the image area
                     uiHandler.showElem(document.getElementById("imagearea"));
                 });
             });
