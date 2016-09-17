@@ -86,6 +86,7 @@
             uiHandler.hideElem(document.getElementById("preview-area"));
             //show the loading text
             uiHandler.showElem(document.getElementById("loading-text-area"));
+            uiHandler.hideElem(document.getElementById("imagearea"));
             //disable the buttons
             document.getElementById("file-input-button").disabled = true;
             document.getElementById("render-mosaic").disabled = true;
@@ -100,6 +101,7 @@
                     //enable the buttons again
                     document.getElementById("file-input-button").disabled = false;
                     document.getElementById("render-mosaic").disabled = false;
+                    uiHandler.showElem(document.getElementById("imagearea"));
                 });
             });
         }

@@ -23,7 +23,7 @@ var uiHandler = (function(URL) {
     var renderImageInPreviewCanvas = function(container, imageURL) {
         //just for added effect, fade out the image
         fadeOutElem(container);
-
+        //create a canvas element to show the preview
         var canvas = document.createElement('canvas');
         canvas.id = "preview-canvas";
         var canvasContext = canvas.getContext("2d");
@@ -31,7 +31,7 @@ var uiHandler = (function(URL) {
         var image = new Image();
         //set the url for the image
         image.src = imageURL;
-        //on image load listener
+        //on image load callback
         image.onload = function() {
             //set the width of the canvas to the same width of the image
             canvas.width = this.width;
@@ -40,9 +40,10 @@ var uiHandler = (function(URL) {
             container.parentNode.style.width = this.width + "px";
             container.parentNode.style.height = this.height + "px";
             //let's draw the preview image in the canvas
-            // canvasContext.drawImage(this, 0, 0, canvas.width, canvas.height);
             _drawImage(canvasContext, this, 0, 0);
+            //clear the contents of the container
             container.innerHTML = null;
+            //append the canvas to the dom
             container.appendChild(canvas);
             showElem(container);
             //add the fadein class to fade in the image after it has rendered
@@ -50,7 +51,24 @@ var uiHandler = (function(URL) {
         };
         return image;
     };
-
+    /**
+     * Handles the drawing of an image on the canvas
+     * @param  {Object} canvasContext The context of the canvas
+     * @param  {Object} image         image to render
+     * @param  {number} xCoord        x coordinate where to render
+     * @param  {number} yCoord        y coordinate where to render
+     * @param  {number} width         width of the image
+     * @param  {number} height        height of the image
+     * @return {Object}               The canvas context
+     */
+    function _drawImage(canvasContext, image, xCoord, yCoord, width, height) {
+        canvasContext.imageSmoothingEnabled = false;
+        canvasContext.mozImageSmoothingEnabled = false;
+        canvasContext.msImageSmoothingEnabled = false;
+        canvasContext.oImageSmoothingEnabled = false;
+        canvasContext.drawImage(image, xCoord, yCoord, image.width, image.height);
+        return canvasContext;
+    }
     /**
      * Clears the content of a canvas
      * @param  {Object} canvas The canvas dom element reference
@@ -79,8 +97,6 @@ var uiHandler = (function(URL) {
         //add both classes to the element
         elem.classList.add("fade");
         elem.classList.add("fadein");
-        // elem.style.display = '';
-        // forceElemRedraw(elem);
         return elem;
     }
 
@@ -96,7 +112,6 @@ var uiHandler = (function(URL) {
         elem.classList.remove("fadein");
         //workaround to redraw the dom element when removing classes and adding new ones
         forceElemRedraw(elem);
-        // elem.style.display = "none";
         return elem;
     }
 
@@ -113,12 +128,24 @@ var uiHandler = (function(URL) {
         return elem;
     }
 
+    /**
+     * Hides a dom element
+     * @param  {Object} elem The dom element
+     * @return {Object}      The dom element
+     */
     function hideElem(elem) {
         elem.style.display = 'none';
+        return elem;
     }
 
+    /**
+     * Shows a hidden element via display none
+     * @param  {Object} elem The dom element
+     * @return {Object}      The dom element
+     */
     function showElem(elem) {
         elem.style.display = '';
+        return elem;
     }
 
     /**
@@ -128,6 +155,89 @@ var uiHandler = (function(URL) {
      * @return {[type]}            [description]
      */
     function renderMosaic(canvasContainer, mosaicData, canvasHeight, canvasWidth) {
+        var renderMosiacPromise = new Promise(function(resolve, reject) {
+            //loop through each row and render
+            var canvasElem = document.createElement('canvas');
+            canvasElem.id = "mosaic-canvas";
+            var canvasContext = canvasElem.getContext("2d");
+            canvasElem.height = canvasHeight;
+            canvasElem.width = canvasWidth;
+            var renderMosaicRowPromises = [];
+            for (var i = 0; i < mosaicData.length; i++) {
+                var mosaicRow = mosaicData[i];
+                renderMosaicRowPromises.push(_renderMosaicRow(mosaicRow, canvasContext));
+                // _rendertMosaicTileImageRecursive(mosaicRow[0], 0, mosaicRow, canvasContext);
+            }
+            Promise.all(renderMosaicRowPromises).then(function() {
+                canvasContainer.innerHTML = null;
+                canvasContainer.appendChild(canvasElem);
+                showElem(canvasContainer);
+                resolve(canvasContainer);
+            });
+        });
+        return renderMosiacPromise;
+    }
+
+    function _renderMosaicRow(mosaicRow, canvasContext){
+        return new Promise(function(resolve, reject){
+            _rendertMosaicTileImageRecursive(mosaicRow[0], 0, mosaicRow, canvasContext, resolve);
+        });
+    }
+
+    function _rendertMosaicTileImageRecursive(mosaicTile, index, mosaicTiles, canvasContext, callBack) {
+        if (index === mosaicTiles.length) {
+            callBack(mosaicTiles);
+            // return mosaicTiles;
+        } else {
+            _getMosaicTileImage(mosaicTile.svgUrl, mosaicTile.xCoord, mosaicTile.yCoord, canvasContext).then(function(imageData) {
+                // _drawImage(canvasContext, imageData.image, imageData.xCoord, imageData.yCoord);
+                index++;
+                _rendertMosaicTileImageRecursive(mosaicTiles[index], index, mosaicTiles, canvasContext, callBack);
+            });
+        }
+    }
+
+    function _getMosaicTileImage(imgSrc, xCoord, yCoord, canvasContext) {
+        //create a promise object for each image to be created
+        var promise = new Promise(function(resolve, reject) {
+            //let's create an image object for the svg to display in
+            var image = new Image();
+            //set the source url, in this case the blob url
+            image.src = imgSrc;
+            //on load of the image
+            image.onload = function() {
+                //try catch just in case there is an error
+                try {
+                    _drawImage(canvasContext, this, xCoord, yCoord);
+                    //give the image to the callback function so as to render and also the xCoordinate and yCoordinates for the canvas to draw it on
+                    resolve({
+                        image: this,
+                        xCoord: xCoord,
+                        yCoord: yCoord
+                    });
+                    //release the url
+                    URL.revokeObjectURL(imgSrc);
+                    // onImageLoaded(this);
+                } catch (e) {
+                    //send back the error to the promise then throw it to alert the developer
+                    var err = new Error(e);
+                    reject(err);
+                    throw err;
+                }
+            };
+        });
+        //return a promise
+        return promise;
+    }
+
+    //backups
+    /**
+     * [renderMosaic description]
+     * @param  {[type]} canvasElem [description]
+     * @param  {[type]} mosaicData [description]
+     * @return {[type]}            [description]
+     */
+    function bak_renderMosaic(canvasContainer, mosaicData, canvasHeight, canvasWidth) {
         var renderMosiacPromise = new Promise(function(resolve, reject) {
             //loop through each row and render
             var canvasElem = document.createElement('canvas');
@@ -149,31 +259,13 @@ var uiHandler = (function(URL) {
         return renderMosiacPromise;
     }
 
+    /**
+     * [_renderMosaicRow description]
+     * @param  {[type]} canvasContext [description]
+     * @param  {[type]} rowData       [description]
+     * @return {[type]}               [description]
+     */
     function bak_renderMosaicRow(canvasContext, rowData) {
-        var renderMosaicRowPromise = new Promise(function(resolve, reject) {
-            var t = _getMosaicTileImageRecursive(rowData[0], 0, rowData);
-            debugger;
-            var promises = [];
-            for (var i = 0; i < rowData.length; i++) {
-                var rowTile = rowData[i];
-                _drawImage(canvasContext, rowTile.image.image, rowTile.image.xCoord, rowTile.image.yCoord);
-                resolve();
-            }
-            // Promise.all(promises).then(function(images) {
-            //     for (var x = 0; x < images.length; x++) {
-            //         var imageData = images[x];
-            //         _drawImage(canvasContext, imageData.image, imageData.xCoord, imageData.yCoord);
-            //         resolve();
-            //     }
-            // }).catch(function(e) {
-            //     reject(e);
-            //     alert("something went wrong please choose another image" + e.message);
-            // });
-        });
-        return renderMosaicRowPromise;
-    }
-
-    function _renderMosaicRow(canvasContext, rowData) {
         var renderMosaicRowPromise = new Promise(function(resolve, reject) {
             var promises = [];
             for (var i = 0; i < rowData.length; i++) {
@@ -194,28 +286,14 @@ var uiHandler = (function(URL) {
         return renderMosaicRowPromise;
     }
 
-    function _getMosaicTileImageRecursive(mosaicTile, index, mosaicTiles) {
-        if (typeof mosaicTiles[index] === "undefined") {
-            return mosaicTiles;
-        } else {
-            _getMosaicTileImage(mosaicTile.svgUrl, mosaicTile.xCoord, mosaicTile.yCoord).then(function(image) {
-                mosaicTiles[index].image = image;
-                index++;
-                _getMosaicTileImageRecursive(mosaicTiles[index], index, mosaicTiles);
-                // return images;
-            });
-        }
-    }
-
-    function _drawImage(canvasContext, image, xCoord, yCoord, width, height) {
-        canvasContext.imageSmoothingEnabled = false;
-        canvasContext.mozImageSmoothingEnabled = false;
-        canvasContext.msImageSmoothingEnabled = false;
-        canvasContext.oImageSmoothingEnabled = false;
-        canvasContext.drawImage(image, xCoord, yCoord, image.width, image.height);
-    }
-
-    function _getMosaicTileImage(imgSrc, xCoord, yCoord) {
+    /**
+     * [_getMosaicTileImage description]
+     * @param  {[type]} imgSrc [description]
+     * @param  {[type]} xCoord [description]
+     * @param  {[type]} yCoord [description]
+     * @return {[type]}        [description]
+     */
+    function bak_getMosaicTileImage(imgSrc, xCoord, yCoord) {
         //create a promise object for each image to be created
         var promise = new Promise(function(resolve, reject) {
             //let's create an image object for the svg to display in
