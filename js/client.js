@@ -81,7 +81,7 @@
             uiHandler.hideElem(document.getElementById("preview-area"));
             uiHandler.showElem(document.getElementById("loading-text-area"));
             var mosaic = new mosaicService.Mosaic(canvas.getContext("2d"), tileWidth, tileHeight);
-            mosaic.getMosaicData(function(mosaicData) {
+            mosaic.getMosaicData().then(function(mosaicData) {
                 uiHandler.renderMosaic(document.getElementById("mosaic-area"), mosaicData, canvas.height, canvas.width).then(function(){
                     uiHandler.hideElem(document.getElementById("loading-text-area"));
                 });

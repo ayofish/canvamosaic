@@ -1,6 +1,6 @@
 function getSvgUrlRecursive(mosaicTile, currIndex, totalTilesCount, mosaic, rowIndex) {
     //the current tile
-    if (currIndex === totalTilesCount) {
+    if (typeof mosaic[currIndex] === "undefined") {
         // this._onTileSVGURLLoaded();
         self.postMessage(mosaic);
         close();
@@ -8,7 +8,6 @@ function getSvgUrlRecursive(mosaicTile, currIndex, totalTilesCount, mosaic, rowI
         httpGet("/color/" + mosaicTile.hex).then(function(response) {
             currIndex++;
             mosaicTile.svgTextXml = response;
-            // mosaicTile.svgUrl = getSvgUrl(response);
             getSvgUrlRecursive(mosaic[currIndex], currIndex, totalTilesCount, mosaic, rowIndex);
         }).catch(function(err){
             self.postMessage(err);
