@@ -77,15 +77,24 @@
      */
     function onClickRenderMosaic(event) {
         var canvas = document.getElementById("preview-canvas");
+        //proceed only if the source image is valid
         if (canvas !== null) {
+            //hide the elements of the preview canvas
             uiHandler.hideElem(document.getElementById("preview-area"));
+            //show the loading text
             uiHandler.showElem(document.getElementById("loading-text-area"));
+            //disable the buttons
             document.getElementById("file-input-button").disabled = true;
             document.getElementById("render-mosaic").disabled = true;
+            //lets instanciate the mosaic object
             var mosaic = new mosaicService.Mosaic(canvas.getContext("2d"), tileWidth, tileHeight);
+            //get the mosaic data and wait for the promises to resolve
             mosaic.getMosaicData().then(function(mosaicData) {
+                //render the mosaic then wait for the promise to resolve
                 uiHandler.renderMosaic(document.getElementById("mosaic-area"), mosaicData, canvas.height, canvas.width).then(function() {
+                    //hide the loading text
                     uiHandler.hideElem(document.getElementById("loading-text-area"));
+                    //enable the buttons again
                     document.getElementById("file-input-button").disabled = false;
                     document.getElementById("render-mosaic").disabled = false;
                 });
