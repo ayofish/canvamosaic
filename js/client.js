@@ -55,17 +55,20 @@
      */
     function onChangeImageInput(event) {
         if (typeof event.target.files[0] !== "undefined") {
-            //get the canvas dom reference
-            //use the URL api and get the blob url of the image
             var image = event.target.files[0];
+            //update the text beside the button for file input
             var inputFileNameContainer = document.getElementById("input-file-name");
             inputFileNameContainer.innerHTML = image.name;
             inputFileNameContainer.title = image.name;
+            //hide the fake image area place holder
             uiHandler.hideElem(document.getElementById("fakeimagearea"));
+            //show the real image area
             uiHandler.showElem(document.getElementById("imagearea"));
+            //use the URL api to create a url for the image
             var url = URL.createObjectURL(image);
-            //render the image in the canvas by using the uiHandler module
+            //hide the mosaic area
             uiHandler.hideElem(document.getElementById("mosaic-area"));
+            //render the image in the canvas by using the uiHandler module
             uiHandler.renderImageInPreviewCanvas(document.getElementById("preview-area"), url);
         }
     }
