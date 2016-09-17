@@ -3,12 +3,11 @@
  * In this case the return are the contents of the Mosaic service package.
  * This bundles together all the needed logic for setting up the mosaic data based on the input image.
  * This is purely data manipulation
- * @param  {Object} Utils      The global utility class that holds the miscellaneous functions shared all over the project
  * @param  {Object} Url        The URL object
  * @return {Object}            The public methods for this module
  */
 //dependency injection
-var mosaicService = (function(Utils, Url) {
+var mosaicService = (function(Url) {
 
     /**
      * Static utility object for the mosaic serive
@@ -261,7 +260,7 @@ var mosaicService = (function(Utils, Url) {
                 //slice up the worker tiles into chunks
                 var workerTiles = mosaicTiles.slice(i, i + tilesPerWorker);
                 //send the message to the workers to start working
-                worker.postMessage([workerTiles[0], 0, workerTiles.length, workerTiles]);
+                worker.postMessage([workerTiles[0], 0, workerTiles]);
                 //listen to the event when the workers finally finish working on their tiles
                 worker.addEventListener('message', function(ev) {
                     //loop on the tiles from the worker
@@ -308,4 +307,4 @@ var mosaicService = (function(Utils, Url) {
         "MosaicTile": MosaicTile,
         "Utils": MosaicUtils
     };
-})(Utils, window.URL);
+})(window.URL);
