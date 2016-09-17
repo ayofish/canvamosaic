@@ -150,7 +150,6 @@ var mosaicService = (function(Utils, Url, window) {
                 }
             }
 
-            var mosaicTilesTotal = mosaic.length;
             this.mosaic = mosaic;
             this.setTilesSvgUrl();
         },

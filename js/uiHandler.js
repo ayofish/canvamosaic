@@ -20,9 +20,14 @@ var uiHandler = (function(URL) {
      * @param  {number} canvasHeight The height of the canvas
      * @return {Object} image        The image object
      */
-    var renderImageInCanvas = function(canvas, imageURL, canvasWidth, canvasHeight) {
+    var renderImageInPreviewCanvas = function(container, imageURL) {
         //just for added effect, fade out the image
-        fadeOutElem(canvas);
+        fadeOutElem(container);
+        var canvas = document.createElement('canvas');
+        canvas.id = "preview-canvas";
+        var canvasContext = canvas.getContext("2d");
+        canvasContext.imageSmoothingEnabled = false;
+        canvasContext.mozImageSmoothingEnabled = false;
         //initialize an image object
         var image = new Image();
         //set the url for the image
@@ -30,13 +35,17 @@ var uiHandler = (function(URL) {
         //on image load listener
         image.onload = function() {
             //set the width of the canvas to the same width of the image
-            canvas.width = (typeof canvasWidth === "undefined" || null ? this.width : canvasWidth);
+            canvas.width = this.width;
             //set the height of the canvas to the same height as the image
-            canvas.height = (typeof canvasHeight === "undefined" || null ? this.height : canvasHeight);
+            canvas.height = this.height;
             //let's draw the preview image in the canvas
-            canvas.getContext("2d").drawImage(this, 0, 0, canvas.width, canvas.height);
+            // canvasContext.drawImage(this, 0, 0, canvas.width, canvas.height);
+            _drawImage(canvasContext, this, 0, 0);
+            container.innerHTML = null;
+            container.appendChild(canvas);
+            showElem(container);
             //add the fadein class to fade in the image after it has rendered
-            fadeInElem(canvas);
+            fadeInElem(container);
         };
         return image;
     };
@@ -69,6 +78,8 @@ var uiHandler = (function(URL) {
         //add both classes to the element
         elem.classList.add("fade");
         elem.classList.add("fadein");
+        // elem.style.display = '';
+        // forceElemRedraw(elem);
         return elem;
     }
 
@@ -84,6 +95,7 @@ var uiHandler = (function(URL) {
         elem.classList.remove("fadein");
         //workaround to redraw the dom element when removing classes and adding new ones
         forceElemRedraw(elem);
+        // elem.style.display = "none";
         return elem;
     }
 
@@ -100,6 +112,14 @@ var uiHandler = (function(URL) {
         return elem;
     }
 
+    function hideElem(elem){
+        elem.style.display = 'none';
+    }
+
+    function showElem(elem){
+        elem.style.display = '';
+    }
+
     /**
      * [renderMosaic description]
      * @param  {[type]} canvasElem [description]
@@ -109,61 +129,92 @@ var uiHandler = (function(URL) {
     function renderMosaic(canvasContainer, mosaicData, canvasHeight, canvasWidth) {
         //loop through each row and render
         var canvasElem = document.createElement('canvas');
+        canvasElem.id = "mosaic-canvas";
         var canvasContext = canvasElem.getContext("2d");
         canvasContext.imageSmoothingEnabled = false;
         canvasContext.mozImageSmoothingEnabled = false;
         canvasElem.height = canvasHeight;
         canvasElem.width = canvasWidth;
+        var renderMosaicRowPromises = [];
         for (var i = 0; i < mosaicData.length; i++) {
-            _renderMosaicRow(canvasContext, mosaicData[i]);
+            renderMosaicRowPromises.push(_renderMosaicRow(canvasContext, mosaicData[i]));
         }
+        fadeOutElem(canvasElem);
         canvasContainer.innerHTML = null;
         canvasContainer.appendChild(canvasElem);
-        fadeInElem(canvasElem);
+        Promise.all(renderMosaicRowPromises).then(function() {
+            showElem(document.getElementById("mosaic-area"));
+            fadeInElem(canvasElem);
+
+        });
+
     }
 
     function _renderMosaicRow(canvasContext, rowData) {
-        _renderMosaicTilesRecursive(rowData[0], 0, rowData.length, rowData, canvasContext);
-        // for (var i = 0; i < rowData.length; i++) {
-        //     var rowDataObj = rowData[i];
-        //     // _renderMosaicTile(canvasContext, rowDataObj.svgUrl, rowDataObj.xCoord, rowDataObj.yCoord);
-        // }
-    }
-
-    function _renderMosaicTilesRecursive(mosaicTile, iter, totalTiles, rowTiles, canvasContext){
-        if(iter == totalTiles){
-            return;
-        }else{
-            iter++;
-            _renderMosaicTile(canvasContext, mosaicTile.svgUrl, mosaicTile.xCoord, mosaicTile.yCoord, function(){
-                _renderMosaicTilesRecursive(rowTiles[iter], iter, totalTiles, rowTiles, canvasContext);
-            });
-        }
-    }
-
-    function _renderMosaicTile(canvasContext, imgSrc, xCoord, yCoord, onImageLoaded) {
-        var image = new Image();
-        image.src = imgSrc;
-        image.onload = function() {
-            try {
-                canvasContext.drawImage(image, xCoord, yCoord);
-                // canvasContext.imageSmoothingEnabled = false;
-                // canvasContext.mozImageSmoothingEnabled = false;
-                //release the url
-                URL.revokeObjectURL(imgSrc);
-                onImageLoaded(this);
-            } catch (e) {
-                throw new Error(e);
+        var renderMosaicRowPromise = new Promise(function(resolve, reject) {
+            var promises = [];
+            for (var i = 0; i < rowData.length; i++) {
+                var rowTile = rowData[i];
+                promises.push(_getMosaicTileImage(rowTile.svgUrl, rowTile.xCoord, rowTile.yCoord));
             }
-        };
+            Promise.all(promises).then(function(images) {
+                for (var x = 0; x < images.length; x++) {
+                    var imageData = images[x];
+                    _drawImage(canvasContext, imageData.image, imageData.xCoord, imageData.yCoord);
+                    resolve();
+                }
+            }).catch(function(e) {
+                reject(e);
+                alert("something went wrong please choose another image" + e.message);
+            });
+        });
+        return renderMosaicRowPromise;
+    }
 
+    function _drawImage(canvasContext, image, xCoord, yCoord, width, height) {
+        canvasContext.drawImage(image, xCoord, yCoord, image.width, image.height);
+    }
+
+    function _getMosaicTileImage(imgSrc, xCoord, yCoord) {
+        //create a promise object for each image to be created
+        var promise = new Promise(function(resolve, reject) {
+            //let's create an image object for the svg to display in
+            var image = new Image();
+            //set the source url, in this case the blob url
+            image.src = imgSrc;
+            //on load of the image
+            image.onload = function() {
+                //try catch just in case there is an error
+                try {
+                    //give the image to the callback function so as to render and also the xCoordinate and yCoordinates for the canvas to draw it on
+                    resolve({
+                        image: this,
+                        xCoord: xCoord,
+                        yCoord: yCoord
+                    });
+                    //release the url
+                    URL.revokeObjectURL(imgSrc);
+                    // onImageLoaded(this);
+                } catch (e) {
+                    //send back the error to the promise then throw it to alert the developer
+                    var err = new Error(e);
+                    reject(err);
+                    throw err;
+                }
+            };
+        });
+        //return a promise
+        return promise;
     }
 
     //the public methods for this module
     return {
-        "renderImageInCanvas": renderImageInCanvas,
+        "renderImageInPreviewCanvas": renderImageInPreviewCanvas,
         "clearCanvas": clearCanvas,
         "fadeInElem": fadeInElem,
-        "renderMosaic": renderMosaic
+        "fadeOutElem": fadeOutElem,
+        "renderMosaic": renderMosaic,
+        "hideElem": hideElem,
+        "showElem": showElem
     };
 })(window.URL);
